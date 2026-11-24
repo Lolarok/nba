@@ -1,6 +1,14 @@
 name: Daily NBA Stats Update
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "app.js"
+      - "build_app.py"
+      - "generate_demo_data.py"
+      - "update_nba_stats.py"
+      - ".github/workflows/daily-nba-update.yml"
   schedule:
     - cron: "0 8 * * *"
   workflow_dispatch:
