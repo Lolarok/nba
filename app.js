@@ -81,7 +81,7 @@ function tipHTML(k) {
 async function init() {
   buildHead2();
   try {
-    const res = await fetch("../data/nba_stats.json", { cache: "no-store" });
+    const res = await fetch("data/nba_stats.json", { cache: "no-store" });
     if (!res.ok) throw new Error(res.status);
     state.data = await res.json();
   } catch {
