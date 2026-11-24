@@ -8,7 +8,7 @@ import json
 import math
 import os
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "data", "nba_stats.json")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "nba_stats.json")
 
 # ---------------------------------------------------------------- utility ----
 def seeded_uniform(key: str) -> float:
