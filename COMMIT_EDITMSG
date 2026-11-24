@@ -1,0 +1,6 @@
+feat: NBA Advanced Stats dashboard con metriche proprietarie PCI/OGMS/DADR
+
+- App statica (index.html/style.css/app.js) con Chart.js per radar e bar chart
+- Dataset demo 15 giocatori (stagione 2026-27) con periodi L5/L10/stagione
+- scripts/update_nba_stats.py: aggiornamento nba_api con rate-limit e fallback
+- Workflow GitHub Actions giornaliero (cron 08:00 UTC) con commit automatico
