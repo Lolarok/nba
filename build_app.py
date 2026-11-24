@@ -7,7 +7,7 @@ workflow GitHub Actions aggiornerà)."""
 import json
 import os
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.dirname(os.path.abspath(__file__))
 APP = ROOT  # index.html, style.css, app.js alla radice del repo
 DATA = os.path.join(ROOT, "data", "nba_stats.json")
 OUTDIR = os.path.join(ROOT, "download", "nba-advanced-stats")
@@ -33,14 +33,15 @@ html = html.replace(
     demo_block + "<script>\n" + js + "\n</script>")
 
 # il fetch punta al JSON nella stessa cartella (repo root / GitHub Pages)
-html = html.replace('fetch("../data/nba_stats.json"', 'fetch("nba_stats.json"')
+html = html.replace('fetch("../data/nba_stats.json"', 'fetch("data/nba_stats.json"')
 
 out = os.path.join(OUTDIR, "index.html")
 with open(out, "w", encoding="utf-8") as f:
     f.write(html)
 
 # copia anche il JSON (per l'uso con un server locale / GitHub Pages)
-with open(os.path.join(OUTDIR, "nba_stats.json"), "w", encoding="utf-8") as f:
+os.makedirs(os.path.join(OUTDIR, "data"), exist_ok=True)
+with open(os.path.join(OUTDIR, "data", "nba_stats.json"), "w", encoding="utf-8") as f:
     f.write(demo)
 
 kb = os.path.getsize(out) / 1024
