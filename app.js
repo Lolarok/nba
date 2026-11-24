@@ -58,7 +58,7 @@ const state = {
 
 /* ---------------- Utilità ---------------- */
 const $ = (s) => document.querySelector(s);
-const fmt = (v, d = 1) => (v == null || Number.isNaN(v) ? "—" : v.toFixed(d));
+const fmt = (v, d = 1) => (v == null || Number.isNaN(Number(v)) ? "—" : Number(v).toFixed(d));
 const initials = (name) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 function teamColors(abbr) {
   const map = {
@@ -170,10 +170,11 @@ function renderCards() {
     const m = METRICS[k];
     let best = null;
     for (const p of players) {
-      const v = p.periods[per].metrics[k];
-      if (!best || v > best.v) best = { p, v };
+      const v = p.periods[per]?.metrics?.[k];
+      if (v != null && Number.isFinite(v) && (!best || v > best.v)) best = { p, v };
     }
-    const prev = best.p.periods[per].metricsPrev[k];
+    if (!best) return `<div class="tcard" style="--c1:${c1};--c2:${c2};--cs:${m.soft}"><span class="tag">${m.short} — ${m.label}</span><div class="big">Non disponibile</div><div class="foot">In attesa dei dati tracking/Synergy verificati.</div></div>`;
+    const prev = best.p.periods[per].metricsPrev?.[k];
     const delta = prev > 0 ? ((best.v - prev) / prev) * 100 : 0;
     const up = delta >= 0;
     const b = best.p.periods[per];
@@ -236,12 +237,12 @@ function getSortedFiltered() {
 
 function renderTable() {
   const rows = getSortedFiltered();
-  const maxPci = Math.max(...rows.map(r => r.b.metrics.pci), 0.001);
+  const maxPci = Math.max(...rows.map(r => r.b.metrics.pci || 0), 0.001);
 
   $("#tbody").innerHTML = rows.map(({ p, b }) => {
     const pt = k => `
-      <td>${b.playTypes[k].ppp.toFixed(2)}</td>
-      <td>${b.playTypes[k].freq.toFixed(1)}</td>`;
+      <td>${fmt(b.playTypes[k].ppp, 2)}</td>
+      <td>${fmt(b.playTypes[k].freq, 1)}</td>`;
     const tcol = teamColors(p.teamAbbr);
     return `
     <tr data-id="${p.id}">
@@ -258,14 +259,14 @@ function renderTable() {
       <td class="${b.ts >= 0.60 ? "good" : b.ts < 0.55 ? "bad" : ""}">${(b.ts * 100).toFixed(1)}</td>
       ${pt("prbh")}${pt("iso")}${pt("spotup")}${pt("cut")}${pt("offscreen")}
       <td>${fmt(b.tracking.touches)}</td>
-      <td>${b.tracking.secPerTouch.toFixed(2)}</td>
+      <td>${fmt(b.tracking.secPerTouch, 2)}</td>
       <td>${fmt(b.tracking.potentialAssists)}</td>
-      <td>${b.tracking.milesOff.toFixed(2)}</td>
+      <td>${fmt(b.tracking.milesOff, 2)}</td>
       <td>${fmt(b.tracking.contestedShots)}</td>
       <td>${fmt(b.tracking.deflections)}</td>
-      <td class="met-pci"><span class="mval pci">${b.metrics.pci.toFixed(3)}</span><span class="bar-bg"><i style="width:${(b.metrics.pci / maxPci * 100).toFixed(0)}%"></i></span></td>
-      <td class="met-ogms"><span class="mval ogms">${b.metrics.ogms.toFixed(3)}</span></td>
-      <td class="met-dadr"><span class="mval dadr">${b.metrics.dadr.toFixed(3)}</span></td>
+      <td class="met-pci"><span class="mval pci">${fmt(b.metrics.pci, 3)}</span><span class="bar-bg"><i style="width:${(b.metrics.pci / maxPci * 100).toFixed(0)}%"></i></span></td>
+      <td class="met-ogms"><span class="mval ogms">${fmt(b.metrics.ogms, 3)}</span></td>
+      <td class="met-dadr"><span class="mval dadr">${fmt(b.metrics.dadr, 3)}</span></td>
     </tr>`;
   }).join("") || `<tr><td colspan="30" style="text-align:center;padding:34px;color:var(--txt-2)">Nessun giocatore trovato — modifica i filtri.</td></tr>`;
 
@@ -316,14 +317,14 @@ function openDrawer(id) {
   const stats = [
     ["GP", b.gp, ""], ["MIN", fmt(b.min), ""], ["PTS", fmt(b.pts), ""],
     ["REB", fmt(b.reb), ""], ["AST", fmt(b.ast), ""], ["TS%", (b.ts * 100).toFixed(1), ""],
-    ["Tocchi", fmt(b.tracking.touches), ""], ["Sec/tocco", b.tracking.secPerTouch.toFixed(2), ""],
-    ["Pass. pot.", fmt(b.tracking.potentialAssists), ""], ["Miglia off.", b.tracking.milesOff.toFixed(2), ""],
+    ["Tocchi", fmt(b.tracking.touches), ""], ["Sec/tocco", fmt(b.tracking.secPerTouch, 2), ""],
+    ["Pass. pot.", fmt(b.tracking.potentialAssists), ""], ["Miglia off.", fmt(b.tracking.milesOff, 2), ""],
     ["Tiri contest.", fmt(b.tracking.contestedShots), ""], ["Deflections", fmt(b.tracking.deflections), ""],
   ];
 
   const mets = ["pci", "ogms", "dadr"].map(k => {
-    const m = b.metrics[k], prev = b.periods?.[per]?.metricsPrev?.[k];
-    return `<div class="dr-stat"><div class="v ${k}">${m.toFixed(3)}</div><div class="k">${METRICS[k].short}</div></div>`;
+    const m = b.metrics[k];
+    return `<div class="dr-stat"><div class="v ${k}">${fmt(m, 3)}</div><div class="k">${METRICS[k].short}</div></div>`;
   }).join("");
 
   $("#drBody").innerHTML = `
@@ -350,8 +351,10 @@ function openDrawer(id) {
   $("#overlay").classList.add("on");
   $("#drawer").setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
-  drawRadar(p, per);
-  drawPtChart(p, per);
+  if (["pci","ogms","dadr"].every(k => b.metrics[k] != null && state.data.meta.leagueAverages?.[per]?.[k] != null)) drawRadar(p, per);
+  else $("#radarCanvas").parentElement.innerHTML = `<div class="dr-note">Confronto non disponibile: in attesa delle metriche proprietarie verificate.</div>`;
+  if (PT_KEYS.every(k => b.playTypes[k].freq != null && b.playTypes[k].ppp != null)) drawPtChart(p, per);
+  else $("#ptCanvas").parentElement.innerHTML = `<div class="dr-note">Distribuzione Play Type non disponibile: i dati Synergy non sono ancora collegati.</div>`;
 }
 
 function closeDrawer() {
