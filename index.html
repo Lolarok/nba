@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBA Advanced Stats — Dashboard Metriche Proprietarie</title>
+<meta name="description" content="Dashboard statistiche avanzate NBA: Play Type Synergy, Player Tracking e metriche proprietarie PCI, OGMS, DADR.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23ffb020'/%3E%3Ctext x='50' y='68' font-size='52' font-weight='900' text-anchor='middle' fill='%2310141b' font-family='Arial'%3EA%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="hd-in">
+    <div class="brand">
+      <div class="logo">A+</div>
+      <div>
+        <h1>NBA <em>Advanced</em> Stats</h1>
+        <div class="sub">Play Type · Tracking · Metriche proprietarie</div>
+      </div>
+    </div>
+    <div class="hd-tools">
+      <span class="updated" id="updatedBadge"><span class="dot"></span><span id="updatedTxt">—</span></span>
+    </div>
+  </div>
+</header>
+
+<div class="filters">
+  <div class="f-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input id="searchInput" type="search" placeholder="Cerca giocatore o squadra (es. Curry, Celtics)…" autocomplete="off">
+  </div>
+  <div class="f-box">
+    <select id="periodFilter" aria-label="Selettore periodo">
+      <option value="season" selected>Stagione intera</option>
+      <option value="l10">Ultime 10 partite</option>
+      <option value="l5">Ultime 5 partite</option>
+    </select>
+  </div>
+  <div class="f-box">
+    <select id="posFilter" aria-label="Filtra per ruolo">
+      <option value="">Tutti i ruoli</option>
+      <option value="G">Guardie (G)</option>
+      <option value="F">Alti (F)</option>
+      <option value="C">Centri (C)</option>
+    </select>
+  </div>
+  <div class="f-box">
+    <select id="teamFilter" aria-label="Filtra per squadra">
+      <option value="">Tutte le squadre</option>
+    </select>
+  </div>
+</div>
+
+<section class="section" id="topSection">
+  <div class="sec-head">
+    <h2>Top Performers</h2>
+    <span class="note">Leader NBA per metrica proprietaria · <span id="tpPeriodLabel">stagione</span></span>
+  </div>
+  <div class="cards" id="cardsRow"></div>
+</section>
+
+<section class="section" id="tableSection">
+  <div class="sec-head">
+    <h2>Classifica giocatori</h2>
+    <span class="note">Clicca sulle intestazioni per ordinare · clicca su una riga per il profilo</span>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table id="mainTable">
+        <thead>
+          <tr id="headRow">
+            <th class="left sortable" rowspan="2" data-key="name" data-type="str">Giocatore <span class="arrow"></span></th>
+            <th class="left sortable" rowspan="2" data-key="teamAbbr" data-type="str">Squadra <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="pos" data-type="str">Ruolo <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="gp" data-type="num">GP <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="min" data-type="num">MIN <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="pts" data-type="num">PTS <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="reb" data-type="num">REB <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="ast" data-type="num">AST <span class="arrow"></span></th>
+            <th class="sortable" rowspan="2" data-key="ts" data-type="num">TS% <span class="arrow"></span></th>
+            <th class="th-group" colspan="2">Pick &amp; Roll BH</th>
+            <th class="th-group" colspan="2">Isolation</th>
+            <th class="th-group" colspan="2">Spot-Up</th>
+            <th class="th-group" colspan="2">Cut</th>
+            <th class="th-group" colspan="2">Off-Screen</th>
+            <th class="th-group" colspan="6">Player Tracking</th>
+            <th class="th-group th-metric h-pci sortable" rowspan="2" data-key="m.pci" data-type="num"><span class="tip-host">PCI<span class="tip-ico-slot"></span></span> <span class="arrow"></span></th>
+            <th class="th-group th-metric h-ogms sortable" rowspan="2" data-key="m.ogms" data-type="num"><span class="tip-host">OGMS<span class="tip-ico-slot"></span></span> <span class="arrow"></span></th>
+            <th class="th-group th-metric h-dadr sortable" rowspan="2" data-key="m.dadr" data-type="num"><span class="tip-host">DADR<span class="tip-ico-slot"></span></span> <span class="arrow"></span></th>
+          </tr>
+          <tr id="headRow2"></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="tbl-info">
+      <div id="rowCount">—</div>
+      <div class="legend">
+        <span><i style="background:var(--amber)"></i>PCI — Pressure Creation Index</span>
+        <span><i style="background:var(--blue)"></i>OGMS — Off-Ball Gravity &amp; Movement Score</span>
+        <span><i style="background:var(--green)"></i>DADR — Defensive Activity &amp; Deterrence Rate</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div><b>NBA Advanced Stats</b> · Dati demo stagione 2026-27 · Aggiornamento automatico giornaliero via GitHub Actions (nba_api)</div>
+  <div>Metriche proprietarie: <b>PCI</b> · <b>OGMS</b> · <b>DADR</b></div>
+</footer>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dr-head">
+    <button class="x" id="drawerClose" aria-label="Chiudi profilo">✕</button>
+    <div class="who" id="drWho"></div>
+  </div>
+  <div class="dr-body" id="drBody"></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
