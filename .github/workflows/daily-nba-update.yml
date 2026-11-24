@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: daily-nba-update
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   update:
