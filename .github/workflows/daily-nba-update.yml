@@ -1,0 +1,63 @@
+name: Daily NBA Stats Update
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-nba-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ensure a clearly labelled demo snapshot exists
+        run: python generate_demo_data.py
+
+      - name: Update current-season NBA data
+        run: python update_nba_stats.py --pause 1.5 --top 120
+
+      - name: Validate data file
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("data/nba_stats.json")
+          assert path.exists(), "data/nba_stats.json was not generated"
+          doc = json.loads(path.read_text(encoding="utf-8"))
+          assert doc.get("players"), "No player records found"
+          assert doc.get("meta", {}).get("source") in {"demo", "nba_api"}
+          print(f"Valid snapshot: {len(doc['players'])} players; source={doc['meta']['source']}")
+          PY
+
+      - name: Commit updated snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/nba_stats.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit"
+          else
+            git commit -m "chore(data): refresh NBA stats"
+            git push
+          fi
