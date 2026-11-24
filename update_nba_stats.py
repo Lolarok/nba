@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 # --------------------------------------------------------------------------- #
 # Configurazione
 # --------------------------------------------------------------------------- #
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "data", "nba_stats.json")
 
 SEASON_FORMAT = "regular"          # Synergy: Regular Season
