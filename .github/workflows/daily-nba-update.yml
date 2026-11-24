@@ -5,8 +5,6 @@ on:
     branches: [main]
     paths:
       - "app.js"
-      - "build_app.py"
-      - "generate_demo_data.py"
       - "update_nba_stats.py"
       - ".github/workflows/daily-nba-update.yml"
   schedule:
@@ -27,37 +25,30 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Ensure a clearly labelled demo snapshot exists
-        run: python generate_demo_data.py
-
-      - name: Update current-season NBA data
-        run: python update_nba_stats.py --pause 1.5 --top 120
-
-      - name: Validate data file
+      - name: Fetch verified NBA season stats
+        run: python update_nba_stats.py --pause 1.5 --top 400
+      - name: Validate real data snapshot
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          path = Path("data/nba_stats.json")
-          assert path.exists(), "data/nba_stats.json was not generated"
-          doc = json.loads(path.read_text(encoding="utf-8"))
-          assert doc.get("players"), "No player records found"
-          assert doc.get("meta", {}).get("source") in {"demo", "nba_api"}
-          print(f"Valid snapshot: {len(doc['players'])} players; source={doc['meta']['source']}")
+          p=Path("data/nba_stats.json")
+          d=json.loads(p.read_text(encoding="utf-8"))
+          assert d.get("meta",{}).get("source") == "nba_api", "Snapshot is not real NBA API data"
+          assert len(d.get("players",[])) >= 50, "Too few player records"
+          assert set(d["meta"].get("periods",[])) == {"season","l5","l10"}
+          assert all(x.get("name") and x.get("teamAbbr") for x in d["players"])
+          print("Validated",len(d["players"]),"NBA players; season",d["meta"]["season"])
           PY
-
       - name: Commit updated snapshot
         run: |
           git config user.name "github-actions[bot]"
@@ -66,6 +57,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No data changes to commit"
           else
-            git commit -m "chore(data): refresh NBA stats"
+            git commit -m "chore(data): publish real NBA season stats"
             git push
           fi
