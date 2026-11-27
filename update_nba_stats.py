@@ -24,7 +24,7 @@ def fetch_stats(season, last_n, pause):
             season=season,
             season_type_all_star="Regular Season",
             per_mode_detailed="PerGame",
-            measure_type_detailed="Base",
+            measure_type="Base",
             last_n_games=last_n,
         ).get_data_frames()[0]
     error=None
@@ -100,7 +100,7 @@ def main():
         from nba_api.stats.endpoints import leaguedashplayerstats
         df=leaguedashplayerstats.LeagueDashPlayerStats(
             season=args.season,season_type_all_star="Regular Season",
-            per_mode_detailed="PerGame",measure_type_detailed="Base",last_n_games=0
+            per_mode_detailed="PerGame",measure_type="Base",last_n_games=0
         ).get_data_frames()[0]
         info={int(r["PLAYER_ID"]):r for _,r in df.iterrows()}
         for p in players:
